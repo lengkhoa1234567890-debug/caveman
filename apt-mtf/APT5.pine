@@ -16,7 +16,7 @@
 //   DUONG: RV1 (magenta), RV2 (mau khung), EMA(5) cua muc Pivot dang chon, OW = LWMA(Open, n) - net dut.
 //
 //   Gia tri Pine KHONG tinh duoc nhu MQL5 (khong co tick/spread song, khong co lich su giay):
-//     * spread = hang so i_asymSpreadPts * mintick (khong phai SYMBOL_SPREAD song);
+//     * spread = hang so i_spreadPrice (GIA, vd XAUUSD ~0.5; khong phai SYMBOL_SPREAD song);
 //     * bo dem giay UpA/DnA, Up/Dn, UpB/DnB, UpC/DnC (mau nhan = rowClr theo brk, khong theo AptPivotRowColor), pvD, "| per%" cua cap khung,
 //       cap H4&D1 / D1&W1 (Pine khong co khung D1/W1): KHONG co;
 //     * bo dem giay brkScore / CMF / UpD-DnD / thoi diem Pivot cat OW trong nen hien tai: dung varip nen CHI dem tu luc script chay live;
@@ -196,14 +196,14 @@ i_anchorMin = input.int(0, "Lech moc chia khung so voi 00:00 UTC (phut)", minval
 grpP = "=== VI TRI COT NHAN (so nen 1m, am = ve ben trai) ==="
 // [SUA MQL5SYNC-02] Mac dinh khop MQL5: cot Pivot sat vach Close than nen lon (BARCUR_FUTURE_BARS=1 + InpBarTickChartBars=3 -> ~4 nen 1m),
 // cot RV1(>=5m) = InpRv1LeftM1FutureBars = 30, cot RV2 = InpRv1Rv2LeftM1BarIdx = 44; nhan RV1 khung 1m = i_gapRv1m1 (ben phai cot Pivot).
-i_gapPiv = input.int(4,   "Cot PIVOT cach nen hien tai (nen 1m)", group=grpP)
+i_gapPiv = input.int(2,   "Cot PIVOT cach nen hien tai (nen 1m)", group=grpP)
 i_gapRv1 = input.int(30,  "Cot RV1 (>=5m) cach nen hien tai (InpRv1LeftM1FutureBars)", group=grpP)
 i_gapRv2 = input.int(44, "Cot RV2 cach nen hien tai (InpRv1Rv2LeftM1BarIdx)", group=grpP)
 i_gapCrl = input.int(0,   "Cum CRL cach nen hien tai", group=grpP)
-i_crlStep = input.float(0.16, "Buoc gian dong cua cum CRL (x ATR14)", minval=0.02, step=0.02, group=grpP)
+i_crlStep = input.float(0.28, "Khoang cach dong giua cac nhan cung cot (x ATR14) - tang neu nhan chong len nhau", minval=0.02, step=0.02, group=grpP)
 // [SUA MQL5SYNC-02] Mac dinh size.normal -> size.small (MQL5: font 8 cho nhan Pivot / RV1 / RV2 / cum than nen lon).
 i_fontSize = input.string(size.small, "Co chu", options=[size.tiny, size.small, size.normal, size.large], group=grpP)
-i_gapRv1m1 = input.int(12, "Nhan RV1 khung 1m cach nen hien tai (nen 1m) - MQL5: ngay ben phai chu cot Pivot", group=grpP)
+i_gapRv1m1 = input.int(20, "Nhan RV1 khung 1m cach nen hien tai (nen 1m) - MQL5: ngay ben phai chu cot Pivot", group=grpP)
 
 grpC = "=== MAU DU PHONG (khi thang mau brk khong bat) ==="
 i_colUp = input.color(#FFC400, "Mau du phong chieu TANG", group=grpC)
@@ -322,7 +322,8 @@ i_patAbovePts = input.int(100, "Day cot pattern cao hon dinh nen 1m (point)", gr
 // [SUA MQL5SYNC-02] Spread (point) dung cho MOI gia tri chia spread cua nhan Pivot/RV1 (SpR1/SpR2/diffpv/Pivotdiff/RV1MD/RV1OW) ben MQL5:
 // spread = SYMBOL_SPREAD * _Point. Pine khong co spread song => dung hang so nay quy ra gia: aptSpreadPx = i_asymSpreadPts * syminfo.mintick.
 // Mac dinh 0.3 -> 30 (0.3 la gia tri tinh bang GIA chu khong phai point nen cac so chia spread bi sai lech 100 lan voi mintick = 0.01).
-i_asymSpreadPts = input.float(30.0, "Spread co dinh (point): dung cho <asym>, SpR1/SpR2, diffpv, Pivotdiff, RV1MD/RV1OW", minval=0.001, group=grpG)
+// [SUA MQL5SYNC-02 v2] Doi sang don vi GIA (TradingView co mintick 0.001 nen "point" quy doi sai ~10 lan so voi MT5): vd XAUUSD ~0.5 (MT5 SELL 4150.53 / BUY 4151.05 -> 0.52).
+i_spreadPrice = input.float(0.5, "Spread co dinh tinh bang GIA (= SYMBOL_SPREAD*_Point ben MQL5, vd XAUUSD ~0.5)", minval=0.0001, step=0.05, group=grpG)
 i_showPatLines = input.bool(true, "Ve 2 canh mau hinh cua khung nen lon (15m)", group=grpG)
 // [CAP NHAT THEO YEU CAU - PATAUTO-01] Cong tac MOI: TU DONG chon khung de
 // ve 2 canh, thay cho viec bam tay theo i_barTF (khung than nen lon).
@@ -360,7 +361,7 @@ grpQ = "=== LAM TRON / BO DEM / THAN NEN LON (khop MQL5) ==="
 i_rndStep = input.int(10, "Buoc lam tron <lamtron> (nut LAM TRON: 1000 / 100 / 10)", options=[1000, 100, 10], group=grpQ)
 i_rndRange = input.float(50.0, "Pham vi tim lam tron W (g_aptRndRange)", minval=0.0, group=grpQ)
 i_showRnd = input.bool(true, "Ve moc LAM TRON mau trang (ten khung + gia) o ben phai", group=grpQ)
-i_gapRnd = input.int(70, "Moc LAM TRON cach nen hien tai (nen 1m)", group=grpQ)
+i_gapRnd = input.int(0, "Moc LAM TRON: lech so voi vach Open cua than nen lon (nen 1m, am = sang trai). Chu ket thuc ngay truoc than nen nhu MQL5", group=grpQ)
 i_updWUp = input.float(-20.0, "UpD: W% phai LON HON", group=grpQ)
 i_updBrkUp = input.float(80.0, "UpD: brkD phai LON HON", group=grpQ)
 i_updWDn = input.float(-80.0, "DnD: W% phai NHO HON", group=grpQ)
@@ -387,7 +388,7 @@ i_gapCsma = input.int(38, "Nhan Close Simple cach nhan RV1 1m N nen chart ve tuo
 //══════════════════════════════════════════════════════════════════
 bool aptTfOk = timeframe.in_seconds(timeframe.period) == 60
 // [SUA MQL5SYNC-02] spread quy ra GIA (SYMBOL_SPREAD * _Point ben MQL5) va so chu so thap phan cua gia (_Digits).
-float aptSpreadPx = i_asymSpreadPts * syminfo.mintick
+float aptSpreadPx = i_spreadPrice
 int aptDigits = int(math.max(0.0, math.round(math.log10(1.0 / syminfo.mintick))))
 
 //══════════════════════════════════════════════════════════════════
@@ -5585,7 +5586,7 @@ if barstate.islast
             bool onMk = i_showRnd and km < array.size(mkPx)
             float pxMk = onMk ? array.get(mkPx, km) : na
             string txMk = onMk ? array.get(mkNm, km) + " " + str.tostring(int(math.round(pxMk))) : ""
-            f_setLbl(aptLbRnd, km, time + i_gapRnd * barMs15, pxMk, txMk, color.white, onMk, label.style_label_right, text.align_right)
+            f_setLbl(aptLbRnd, km, tMidCur - tickLen15 + i_gapRnd * barMs15, pxMk, txMk, color.white, onMk, label.style_label_right, text.align_right)
 
         // ---- DrawCloseSimpleLabels: "< <khung> SMA<period>" tai SMA(Close, period) (nen dang chay + period-1 nen TF da dong) ----
         for ic = 0 to APT_TFN - 1
