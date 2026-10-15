@@ -5665,12 +5665,13 @@ if barstate.islast
                 line.set_color(aptPatL2, color.new(color.black, 100))
 
 //══════════════════════════════════════════════════════════════════
-// [SUA MQL5SYNC-02 - THEO YEU CAU] DUONG VE khop DrawRvLinesSelTF() + DrawEmaSeries() + DrawOwLine() cua MQL5 cho khung 1m va 5m:
+// [SUA MQL5SYNC-02 - THEO YEU CAU] DUONG VE khop DrawRvLinesSelTF() + DrawEmaSeries() + DrawOwLine() cua MQL5 cho MOT khung chon (i_hhllTf):
 //   RV1 (MAGENTA, net dut), RV2 (mau khung, net dut), EMA(5) cua MUC PIVOT DANG CHON i_pivLvl (mau theo muc, net dut), OW = LWMA(Open, n) (xanh la, net dut).
 //   plot() ve LIEN TUC qua cac nen, chi doc lai gia tri da tinh san (aptRvLive / aptRv2Live / aptEmaLv / aptHbO).
 //══════════════════════════════════════════════════════════════════
 color aptPivLineClr = aptPivIdx == 0 ? color.white : aptPivIdx <= 9 ? color.lime : aptPivIdx == 10 ? color.orange : color.rgb(154, 205, 50)
 // Khung duy nhat duoc ve: aptOwSelIdx = chi so cua i_hhllTf trong aptTfName (-1 = "Tat"). Khung 3h/4h/6h dang TAT (f_tfEnabled) thi khong ve.
+int aptOwSelIdx = array.indexof(aptTfName, i_hhllTf)
 bool aptLineOn = aptTfOk and aptOwSelIdx >= 0 and f_tfEnabled(aptOwSelIdx)
 int aptLineIdx = math.max(aptOwSelIdx, 0)
 color aptRv2LineClr = array.get(aptTfClr, aptLineIdx)
