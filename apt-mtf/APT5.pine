@@ -306,7 +306,8 @@ i_maMethod = input.string("EMA", "Phuong phap MA cua WPR", options=["SMA", "EMA"
 i_wpr1ColPts = input.int(100, "Cot nhan WPR1 (cat tu CRL): cach hang 1 cua nhan RV1 1m (point)", group=grpF)
 
 grpG = "=== COT NHAN PATTERN 1m..2h (BO SUNG) ==="
-i_showPat = input.bool(true, "Cot nhan Pattern (TF + mau hinh + khoang cach)", group=grpG)
+// [SUA MQL5SYNC-02 v4 - THEO YEU CAU] Mac dinh TAT: bo cot nhan "<TF> - -" (6h - -, 4h - -, ...) tren chart. Bat lai o bang setting neu can.
+i_showPat = input.bool(false, "Cot nhan Pattern (TF + mau hinh + khoang cach)", group=grpG)
 i_patAbovePts = input.int(100, "Day cot pattern cao hon dinh nen 1m (point)", group=grpG)
 // [BO SUNG - THEO YEU CAU] TradingView khong co du lieu spread lich su theo
 // tung nen (khac MT5 CopySpread), nen dung MOT hang so spread CO DINH (point,
