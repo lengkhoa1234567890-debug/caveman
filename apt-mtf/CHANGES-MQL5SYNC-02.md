@@ -33,7 +33,7 @@ Các trường mới được port: `<lamtron>` (AptRoundNearStr), `Pivotdiff/Pi
 
 ## 4. Nhãn/đường mới
 - `HH<tf>` / `LL<tf>` / `MD<tf>` của kênh brkD (khung chọn `i_hhllTf`), `OW<tf> <so nen>` cho mọi khung, mốc LÀM TRÒN màu trắng (R/S, HH, LL, OW — gộp khi trùng giá), nhãn Close Simple `< 1m SMA200`.
-- Đường: RV1 **magenta**, RV2 **màu khung**, EMA(5) của **mức Pivot đang chọn** (thay S1 cố định), OW = LWMA(Open,n) xanh lá; tất cả nét đứt.
+- Đường: chỉ vẽ **một bộ duy nhất** cho **một khung** chọn ở `i_hhllTf` (1m…6h, mặc định 1m, "Tat" = không vẽ): RV1 **magenta**, RV2 **màu khung**, EMA(5) của **mức Pivot đang chọn** `i_pivLvl` (thay S1 cố định), OW = LWMA(Open,n) xanh lá; tất cả nét đứt. Đã bỏ bộ đường 5m riêng.
 - `max_labels_count` / `max_lines_count` nâng lên 500; `APT_SAMP_N` 12→100, `APT_TFBAR_HIST` 125→205 (đủ SMA200 và kênh W%/erh/erl).
 
 ## 5. Mặc định đã đổi cho khớp MQL5

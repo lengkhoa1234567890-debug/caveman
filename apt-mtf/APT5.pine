@@ -236,22 +236,16 @@ i_brkDBars = input.int(10, "So nen cua kenh brkD (nut B<n>, MQL5 mac dinh 10)", 
 // [SUA MQL5SYNC-02] mac dinh 2 -> 3 (RV2_ORDN_DEFAULT = 3 ben MQL5: 1m, 5m, 15m).
 i_brkScoreTfCount = input.int(3, "brkScore: so khung tham gia (1..5, theo thu tu 1m/5m/15m/30m/1h)", minval=1, maxval=5, group=grpBD)
 
-grpD = "=== DUONG RV1 / RV2 / S1 KHUNG 1m (BO SUNG) ==="
-i_showLineRv1 = input.bool(true, "Ve duong RV1 (1m)", group=grpD)
-i_showLineRv2 = input.bool(true, "Ve duong RV2 (1m)", group=grpD)
+// [SUA MQL5SYNC-02 v3 - THEO YEU CAU] CHI VE DUY NHAT 1 BO DUONG (RV1, RV2, Pivot EMA(5) cua muc i_pivLvl, OW) cho MOT khung = i_hhllTf (1m..6h, "Tat" = khong ve) - giong nut chon khung g_aptBrkDTfIdx cua MQL5.
+grpD = "=== DUONG RV1 / RV2 / PIVOT / OW (1 khung = i_hhllTf o nhom HH/LL/MD/OW) ==="
+i_showLineRv1 = input.bool(true, "Ve duong RV1 (khung i_hhllTf)", group=grpD)
+i_showLineRv2 = input.bool(true, "Ve duong RV2 (khung i_hhllTf, mau theo khung)", group=grpD)
 // [SUA MQL5SYNC-02] "Duong S1" doi thanh duong EMA(5) cua MUC PIVOT DANG CHON (i_pivLvl, mac dinh PP) - y het DrawEmaSeries() ben MQL5;
 // mau theo muc (WoodieLevelColor: PP trang, R1..R9 xanh la, S1 cam, S2..S9 vang-xanh), net dut. RV1 mac dinh MAGENTA (rv1Color), RV2 theo mau khung (g_color).
-i_showLineS1  = input.bool(true, "Ve duong Pivot EMA (muc i_pivLvl) (1m)", group=grpD)
+i_showLineS1  = input.bool(true, "Ve duong Pivot EMA(5) (muc i_pivLvl) (khung i_hhllTf)", group=grpD)
 i_colLineRv1  = input.color(color.fuchsia, "Mau duong RV1 (MQL5: clrMagenta)", group=grpD)
-i_colLineRv2  = input.color(color.rgb(154, 205, 50), "Mau duong RV2 (MQL5: InpColor_M1 = YellowGreen)", group=grpD)
 i_lineWidth   = input.int(1, "Do day duong ke", minval=1, maxval=4, group=grpD)
 
-grpD2 = "=== DUONG RV1 / RV2 / S1 KHUNG 5m (BO SUNG) ==="
-i_showLineRv1_5m = input.bool(true, "Ve duong RV1 (5m)", group=grpD2)
-i_showLineRv2_5m = input.bool(true, "Ve duong RV2 (5m)", group=grpD2)
-i_showLineS1_5m  = input.bool(true, "Ve duong Pivot EMA (muc i_pivLvl) (5m)", group=grpD2)
-i_colLineRv1_5m  = input.color(color.fuchsia, "Mau duong RV1 (5m) (MQL5: clrMagenta)", group=grpD2)
-i_colLineRv2_5m  = input.color(color.rgb(30, 144, 255), "Mau duong RV2 (5m) (MQL5: InpColor_M5 = DodgerBlue)", group=grpD2)
 
 grpE = "=== BAR CHART 15m HIEN TAI (BO SUNG) ==="
 i_showBox15m = input.bool(true, "Ve bar 15m hien tai", group=grpE)
@@ -375,7 +369,7 @@ i_showDss = input.bool(false, "Hien 6 hang DaySwingStructure + nhan Call/Flip/Pu
 
 // Khung hien HH / LL / MD (DrawBrkDHHLL) va duong OW (DrawOwLine) - tuong duong nut chon khung g_aptBrkDTfIdx (mac dinh 1m).
 grpR = "=== HH / LL / MD / OW (khop MQL5) ==="
-i_hhllTf = input.string("1m", "Khung ve nhan HH/LL/MD (+ duong OW)", options=["Tat", "1m", "5m", "15m", "30m", "1h", "2h", "3h", "4h", "6h"], group=grpR)
+i_hhllTf = input.string("1m", "KHUNG ve duong RV1/RV2/Pivot/OW + nhan HH/LL/MD", options=["Tat", "1m", "5m", "15m", "30m", "1h", "2h", "3h", "4h", "6h"], group=grpR)
 i_showOwAll = input.bool(true, "Nhan OW<khung> <so nen> cho moi khung (DrawOwLabelsAll)", group=grpR)
 i_showLineOw = input.bool(true, "Ve duong OW = LWMA(Open, n) khung HH/LL (net dut, xanh la)", group=grpR)
 // Nhan Close Simple (DrawCloseSimpleLabels): "< <khung> SMA<period>" tai gia SMA(Close, period) cua chinh khung, mau theo khung (g_color).
@@ -5676,11 +5670,11 @@ if barstate.islast
 //   plot() ve LIEN TUC qua cac nen, chi doc lai gia tri da tinh san (aptRvLive / aptRv2Live / aptEmaLv / aptHbO).
 //══════════════════════════════════════════════════════════════════
 color aptPivLineClr = aptPivIdx == 0 ? color.white : aptPivIdx <= 9 ? color.lime : aptPivIdx == 10 ? color.orange : color.rgb(154, 205, 50)
-int aptOwSelIdx = array.indexof(aptTfName, i_hhllTf)
-plot(i_showLineRv1 and aptTfOk ? array.get(aptRvLive, 0) : na, title="Duong RV1 (1m)", color=i_colLineRv1, style=plot.style_line, linewidth=i_lineWidth, linestyle=plot.linestyle_dashed)
-plot(i_showLineRv2 and aptTfOk ? array.get(aptRv2Live, 0) : na, title="Duong RV2 (1m)", color=i_colLineRv2, style=plot.style_line, linewidth=i_lineWidth, linestyle=plot.linestyle_dashed)
-plot(i_showLineS1 and aptTfOk ? array.get(aptEmaLv, aptPivIdx) : na, title="Duong Pivot EMA (1m)", color=aptPivLineClr, style=plot.style_line, linewidth=i_lineWidth, linestyle=plot.linestyle_dashed)
-plot(i_showLineRv1_5m and aptTfOk ? array.get(aptRvLive, 1) : na, title="Duong RV1 (5m)", color=i_colLineRv1_5m, style=plot.style_line, linewidth=i_lineWidth + 1, linestyle=plot.linestyle_dashed)
-plot(i_showLineRv2_5m and aptTfOk ? array.get(aptRv2Live, 1) : na, title="Duong RV2 (5m)", color=i_colLineRv2_5m, style=plot.style_line, linewidth=i_lineWidth + 1, linestyle=plot.linestyle_dashed)
-plot(i_showLineS1_5m and aptTfOk ? array.get(aptEmaLv, 1 * APT_LVN + aptPivIdx) : na, title="Duong Pivot EMA (5m)", color=aptPivLineClr, style=plot.style_line, linewidth=i_lineWidth + 1, linestyle=plot.linestyle_dashed)
-plot(i_showLineOw and aptTfOk and aptOwSelIdx >= 0 ? f_owLwma(aptOwSelIdx, i_brkDBars) : na, title="Duong OW = LWMA(Open, n) (khung HH/LL)", color=color.lime, style=plot.style_line, linewidth=1, linestyle=plot.linestyle_dashed)
+// Khung duy nhat duoc ve: aptOwSelIdx = chi so cua i_hhllTf trong aptTfName (-1 = "Tat"). Khung 3h/4h/6h dang TAT (f_tfEnabled) thi khong ve.
+bool aptLineOn = aptTfOk and aptOwSelIdx >= 0 and f_tfEnabled(aptOwSelIdx)
+int aptLineIdx = math.max(aptOwSelIdx, 0)
+color aptRv2LineClr = array.get(aptTfClr, aptLineIdx)
+plot(i_showLineRv1 and aptLineOn ? array.get(aptRvLive, aptLineIdx) : na, title="Duong RV1 (khung i_hhllTf)", color=i_colLineRv1, style=plot.style_line, linewidth=i_lineWidth, linestyle=plot.linestyle_dashed)
+plot(i_showLineRv2 and aptLineOn ? array.get(aptRv2Live, aptLineIdx) : na, title="Duong RV2 (khung i_hhllTf)", color=aptRv2LineClr, style=plot.style_line, linewidth=i_lineWidth, linestyle=plot.linestyle_dashed)
+plot(i_showLineS1 and aptLineOn ? array.get(aptEmaLv, aptLineIdx * APT_LVN + aptPivIdx) : na, title="Duong Pivot EMA(5) (khung i_hhllTf)", color=aptPivLineClr, style=plot.style_line, linewidth=i_lineWidth, linestyle=plot.linestyle_dashed)
+plot(i_showLineOw and aptLineOn ? f_owLwma(aptLineIdx, i_brkDBars) : na, title="Duong OW = LWMA(Open, n) (khung i_hhllTf)", color=color.lime, style=plot.style_line, linewidth=i_lineWidth, linestyle=plot.linestyle_dashed)
