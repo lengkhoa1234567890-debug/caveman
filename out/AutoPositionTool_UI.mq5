@@ -85,14 +85,14 @@
 //     vd     : 5m (48/+10 48/+2 0.3 -0.5 { -0.8 ▲112/+5R2 0.1 } -3/-5 4.1/0.2) 48/+10
 //     0. <TF>          = ten khung (g_tfName[i]); sau do 1 dau cach roi <SigBrk><brkD>/<brkddiff> (brkD = (Close-LL)/(HH-LL)*100 cua kenh brkD GIA, <SigBrk> = tam giac tang khi brkD >= 110 / giam khi <= -10, brkddiff = brkD nen hien tai - brkD nen da dong truoc, co dau "+" khi duong; thieu -> "-"). Nhan RV2 khong con gi khac: <MA1> /<MA2> da chuyen sang nhan PIVOT, <RV1W%>/<RV2W%> sang cot hang 2.. duoi nhan RV1 1m; <RV1erh>/... <RV2erh>/... da bo (ke ca phan tinh toan; AptRvChanErStr() con trong file nhung khong con duoc goi).
 //
-//  4) COT PATTERN | object = PFX"PATL_"+i | chuoi = g_patCdlStr[i] (do DrawRv2RsiLabels() ghi, dong "g_patCdlStr[_rv1UdIdx] = g_tfName[i] + AptDxyLvlTag(...) + " " + <5 cap UpE, UpB, Up, UpC, UpA> + " " + _rv1NewFvg + _rv1NewLvn + _rv1NewImb"); chua co -> chi <TF>{<DxyTenMuc>}
-//     FORMAT : <TF>{<DxyTenMuc>} <UpE>/<DnE> <UpB>/<DnB> <Up>/<Dn> <UpC>/<DnC> <UpA>/<DnA> <FVG><LVN><IMB>        vd: 3h{R2} 2.05/0 1.49/0 0/0 2.29/0 2.29/0 87G45L+12% 1.45s   (vd minh hoa hinh dang, khong phai so thuc)
+//  4) COT PATTERN | object = PFX"PATL_"+i | chuoi = g_patCdlStr[i] (do DrawRv2RsiLabels() ghi, dong "g_patCdlStr[_rv1UdIdx] = g_tfName[i] + AptDxyLvlTag(...) + " " + <4 cap UpE, UpB, Up, UpC> + " " + _rv1NewFvg + _rv1NewLvn + _rv1NewImb"); chua co -> chi <TF>{<DxyTenMuc>}
+//     FORMAT : <TF>{<DxyTenMuc>} <UpE>/<DnE> <UpB>/<DnB> <Up>/<Dn> <UpC>/<DnC> <FVG><LVN><IMB>        vd: 3h{R2} 2.05/0 1.49/0 0/0 2.29/0 2.29/0 87G45L+12% 1.45s   (vd minh hoa hinh dang, khong phai so thuc)
 //     {<DxyTenMuc>} = <TenMuc> (muc Woodie PP/R1..R9/S1..S9 gan gia nhat) cua CHINH khung do nhung tinh tren symbol DXY (o nhap g_edtDxyPrefix+"SYM", mac dinh InpDxySymbol),
 //                     cung cong thuc AptWoodieDisplayLvlForTF() (EMA(5) cua muc Woodie, chon muc gan Bid DXY nhat); DINH LIEN sau <TF>; thieu du lieu / symbol khong ton tai -> {-}. Xem AptDxyLvlTag().
 //     1. <TF>          = ten khung.            2. (da bo <cdlS1>; chuoi _rv1CdlS1Str van duoc tinh nhung KHONG con in ra cot Pattern).
-//     3. 5 cap = bo dem Up/Dn (bo ky tu "s") theo DUNG thu tu: UpE/DnE, UpB/DnB, Up/Dn, UpC/DnC, UpA/DnA; cach nhau 1 dau cach; KHONG co ngoac tron; cap UpE/DnE cach {<DxyTenMuc>} 1 dau cach; cap UpA/DnA cach <FVG><LVN><IMB> 1 dau cach.
+//     3. 4 cap = bo dem Up/Dn (bo ky tu "s") theo DUNG thu tu: UpE/DnE, UpB/DnB, Up/Dn, UpC/DnC (UpA/DnA da chuyen sang nhan Pivot); cach nhau 1 dau cach; KHONG co ngoac tron; cap UpE/DnE cach {<DxyTenMuc>} 1 dau cach; cap UpC/DnC cach <FVG><LVN><IMB> 1 dau cach.
 //        UpE/DnE = giay cong don: UpE cong khi <TenMuc> thuoc {PP, R1..R9} VA <brkD> >= 80 VA <brkddiff> > 0.1 VA <bodiff> > 0.1 ; DnE cong khi <TenMuc> thuoc {PP, S1..S9} VA <brkD> <= 20 VA <brkddiff> < -0.1 VA <bodiff> < -0.1 (<brkddiff> / <bodiff> = cung gia tri in o hang khung cua nhan gia giua, xem muc 2c; thieu <TenMuc> / <brkddiff> / <bodiff> -> khong cong). Cung nhip dt va cung moc reset (sang nen moi cua _aptAccResetTf) voi UpB/DnB, Up/Dn, UpC/DnC, UpA/DnA; do DrawBreakStats() cong.
-//     4. <FVG>         = (AptFvgPushStr()) "<pct>G" (FVG tang) / "-<pct>G" (FVG giam) khi Bid DANG NAM TRONG mot vung FVG con hieu luc cua khung; ngoai vung -> RONG. Cach cap <UpA>/<DnA> 1 dau cach.
+//     4. <FVG>         = (AptFvgPushStr()) "<pct>G" (FVG tang) / "-<pct>G" (FVG giam) khi Bid DANG NAM TRONG mot vung FVG con hieu luc cua khung; ngoai vung -> RONG. Cach cap <UpC>/<DnC> 1 dau cach.
 //     5. <LVN>         = (AptLvnPushStr()) "<pct>L" (vd "45L") khi Bid DANG NAM TRONG mot vung LVN (Low Volume Node) cua khung; pct = vi tri Bid trong vung, 0 = mep duoi, 100 = mep tren; ngoai vung -> RONG.
 //                        LVN = cac muc gia LIEN TIEP co volume < 30% volume POC (APT_LVN_PCT) trong Volume Profile dung chung voi <IMB>; vung ngan hon 2 muc (APT_LVN_MIN_BINS) bi bo. DINH LIEN sau <FVG>.
 //     6. <IMB>         = (chuyen tu nhan RV1) Imbalance cua khung (AptImbalanceForTF()), bo ngoac tron: "<+-pct>% <thoi gian>s"; co the RONG; DINH LIEN sau <LVN> (khong dau cach).
@@ -5882,7 +5882,7 @@ void DrawAptPatternColumn()
       // Truc THOI GIAN co dinh = moc nhan RV1 1m (chi lay GIA tu pixel).
       tItem=tAnc;
       AptImbalanceForTF(i,g_tfList[i]);
-      // Cot Pattern: <TF>{<DxyTenMuc>} <UpE>/<DnE> <UpB>/<DnB> <Up>/<Dn> <UpC>/<DnC> <UpA>/<DnA> <FVG><LVN><IMB> (g_patCdlStr[]; chua co -> chi <TF>{<DxyTenMuc>})
+      // Cot Pattern: <TF>{<DxyTenMuc>} <UpE>/<DnE> <UpB>/<DnB> <Up>/<Dn> <UpC>/<DnC> <FVG><LVN><IMB> (g_patCdlStr[]; chua co -> chi <TF>{<DxyTenMuc>})
       string txt=(g_patCdlStr[i]!="") ? g_patCdlStr[i] : (g_tfLabel[i] + AptDxyLvlTag(g_tfList[i]));
       // Mau nhan cot Pattern DOI THEO mau nhan cot Pivot cua CHINH khung nay: dung AptPivotRowColor(tf) -
       //   CUNG ham to mau nhan Pivot (lvlLblClr trong DrawWoodiePivotEma())
@@ -12992,7 +12992,7 @@ void DrawRv2RsiLabels()
             string _rv1NewImb = (_rv1UdIdx >= 0 && _rv1UdIdx < 14) ? AptImbalanceForTF(_rv1UdIdx, tf) : "";
             StringReplace(_rv1NewImb, "(", "");
             StringReplace(_rv1NewImb, ")", "");
-            // Cot Pattern: <TF>{<DxyTenMuc>} <UpE>/<DnE> <UpB>/<DnB> <Up>/<Dn> <UpC>/<DnC> <UpA>/<DnA> <FVG><LVN><IMB> - <IMB> chuyen tu nhan RV1; <FVG> = AptFvgPushStr() (rong khi Bid ngoai vung FVG); <LVN> = AptLvnPushStr() (rong khi Bid ngoai vung LVN).
+            // Cot Pattern: <TF>{<DxyTenMuc>} <UpE>/<DnE> <UpB>/<DnB> <Up>/<Dn> <UpC>/<DnC> <FVG><LVN><IMB> - <IMB> chuyen tu nhan RV1; <FVG> = AptFvgPushStr() (rong khi Bid ngoai vung FVG); <LVN> = AptLvnPushStr() (rong khi Bid ngoai vung LVN).
             string _rv1NewFvg = (_rv1UdIdx >= 0 && _rv1UdIdx < 14) ? AptFvgPushStr(_rv1UdIdx, tf) : "";
             string _rv1NewLvn = (_rv1UdIdx >= 0 && _rv1UdIdx < 14) ? AptLvnPushStr(_rv1UdIdx, tf) : "";
             if(_rv1UdIdx >= 0 && _rv1UdIdx < 14)
@@ -13001,7 +13001,6 @@ void DrawRv2RsiLabels()
                                        _rv1UpBStrNoS + "/" + _rv1DnBStrNoS + " " +
                                        _rv1UpStrNoS  + "/" + _rv1DnStrNoS  + " " +
                                        _rv1UpCStrNoS + "/" + _rv1DnCStrNoS + " " +
-                                       _rv1UpAStrNoS + "/" + _rv1DnAStrNoS + " " +
                                        _rv1NewFvg + _rv1NewLvn + _rv1NewImb;
             if(_rv1UdIdx >= 0 && _rv1UdIdx < 14)
               {
@@ -13027,7 +13026,7 @@ void DrawRv2RsiLabels()
             if(_rv1UdIdx >= 0 && _rv1UdIdx < 14)
                g_midPvWStr[_rv1UdIdx] = _pvWStr;   // -> cot hang 2.. duoi nhan RV1 1m (DrawMidPriceLabel())
             // Nhan Pivot: <TF> <Owtron>   (<MA1> /<MA2> da bo khoi nhan; _rv2LblMa1Str / _rv2LblMa2Str van duoc tinh o khoi tren)
-            _swapPvTxt = g_tfName[i] + " " + _rv2LblOwTronStr;   // <TF> <Owtron> (<Pivotdiff> <Pivotdiff2> <RSI5>/<xu huong> da bo khoi nhan; chuoi _pvDiff1Txt / _pvDiff2Txt / _rv2NewRsi5 van duoc tinh de dung cho nhan RV2)
+            _swapPvTxt = g_tfName[i] + " " + _rv2LblOwTronStr + " " + _rv1UpAStrNoS + "/" + _rv1DnAStrNoS;   // <TF> <Owtron> <UpA>/<DnA> (<Pivotdiff> <Pivotdiff2> <RSI5>/<xu huong> da bo khoi nhan; chuoi _pvDiff1Txt / _pvDiff2Txt / _rv2NewRsi5 van duoc tinh de dung cho nhan RV2)
             // Nhan RV1: <TF> (<rawdiffV1V2>/<diffV1V2>)   (<SpR2>/<SpR1> va <brkD>(<streak>)<SigBrk> da chuyen sang cot hang 2.. duoi nhan RV1 1m - DrawMidPriceLabel())
             //   <rawdiffV1V2> = (RV1 - RV2)/spread (RV1 = g_rv1ValCache[], RV2 = g_aptRv2All[]);
             //   <diffV1V2> = _rv2LblDiffV1V2Str. Thieu RV1/RV2/spread -> "-".
@@ -13045,7 +13044,7 @@ void DrawRv2RsiLabels()
          {
             string _pvTargetName = WoodieLevelLblPrefix(_rv1TenMucLvl) + g_tfName[i];
             // FORMAT NHAN PIVOT (chuoi _swapPvTxt ghi bang ObjectSetString ngay duoi):
-            //   <TF> <Owtron>
+            //   <TF> <Owtron> <UpA>/<DnA>
             //   <Owtron> = _rv2LblOwTronStr (chuyen tu nhan RV2; thieu -> "-"). <PivotW%> khong con tren nhan PIVOT: chuyen sang cot hang 2.. duoi nhan RV1 1m (g_midPvWStr[]); <Pivotdiff2> cach <RSI5>/<xu huong> 1 dau cach.
             //   <RSI5>/<xu huong> = phan sau dau cach DAU TIEN cua g_pivotLblBaseText[i] ("<TF> <RSI5> / <+-diffRSI>" do DrawEmaSeries ghi), bo khoang trang quanh "/" -> dang "48/+2"; rong -> "-".
             //   Chuoi "<TF>{<DxyTenMuc>} <UpE>/<DnE> <UpB>/<DnB> <Up>/<Dn> ... <FVG><LVN><IMB>" hien o COT PATTERN (g_patCdlStr[]).
