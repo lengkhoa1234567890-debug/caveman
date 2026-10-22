@@ -12,7 +12,7 @@
 //  moc thoi gian cua nhan RV1 khung 1m. Moi khung thoi gian co 1 nhan o moi cot.
 //
 //  LUU Y: TEN nhan o day = TEN OBJECT tren chart; moi nhan hien chuoi nhu sau (khong theo ten goi cua chuoi trong code):
-//        - nhan "PIVOT" (object nhan Woodie cua muc <TenMuc>) hien chuoi dai _swapPvTxt (<TF> <Owtron> <Pivotdiff> <Pivotdiff2> <RSI5>/<xu huong>).
+//        - nhan "PIVOT" (object nhan Woodie cua muc <TenMuc>) hien chuoi dai _swapPvTxt (<TF> <Owtron>).
 //        - nhan "RV1"   (object g_rv1RsiLblPrefix+TF)  hien chuoi txt1 trong DrawRv2RsiLabels: <TF> <SpR2>/<SpR1> (<rawdiffV1V2>/<diffV1V2>)[<SigBrk>...].
 //        - nhan "RV2"   (object g_rv2RsiLblPrefix+TF)  chi hien <TF> (bien txt trong DrawRv2RsiLabels).
 //        - COT "PATTERN" (object PFX"PATL_"+i)         hien <TF>{<DxyTenMuc>} <UpE>/<DnE> <UpB>/<DnB> <Up>/<Dn> ... <FVG><LVN><IMB> (g_patCdlStr[]).
@@ -12463,7 +12463,7 @@ int LblAutoGapPx(const int fallbackPx, const string sampleTxt, const int fs)
 //  DrawRv2RsiLabels: tinh va ghi cac nhan theo 14 khung (g_rvTfList = g_tfList), moi nhip ve:
 //    - nhan RV1 (g_rv1RsiLblPrefix+TF, cot RV1, tai gia RV1): noi dung = txt1 = "<TF> (<rawdiffV1V2>/<diffV1V2>)" (xem "FORMAT NHAN" o dau file);
 //    - nhan RV2 (g_rv2RsiLblPrefix+TF, cot RV2, tai gia RV2): chi con "<TF>";
-//    - nhan Pivot (WoodieLevelLblPrefix+TF): ghi de bang _swapPvTxt ("<TF> <Owtron> <Pivotdiff> <Pivotdiff2> <RSI5>/<xu huong>"; xem "FORMAT NHAN PIVOT" ben duoi);
+//    - nhan Pivot (WoodieLevelLblPrefix+TF): ghi de bang _swapPvTxt ("<TF> <Owtron>"; xem "FORMAT NHAN PIVOT" ben duoi);
 //    - nhan RV1 khung 1m (hang 1 cua cum) + 3 hang duoi than nen lon (g_bcTopTxt[0..2]) + hang SYS3;
 //    - cache cho cot Pattern: g_patCdlStr, g_rv1ValCache, g_aptRndPx.
 //  Cot nhan chi bi xoa khi cot do dang TAT (InpShowRv2RsiLbl / InpShowRv1RsiLbl); khi BAT, object cu duoc ObjectMove/ObjectSetString sang gia tri moi.
@@ -13063,8 +13063,8 @@ void DrawRv2RsiLabels()
             }
             if(_rv1UdIdx >= 0 && _rv1UdIdx < 14)
                g_midPvWStr[_rv1UdIdx] = _pvWStr;   // -> cot hang 2.. duoi nhan RV1 1m (DrawMidPriceLabel())
-            // Nhan Pivot: <TF> <Owtron> <Pivotdiff> <Pivotdiff2> <RSI5>/<xu huong>   (<MA1> /<MA2> da bo khoi nhan; _rv2LblMa1Str / _rv2LblMa2Str van duoc tinh o khoi tren)
-            _swapPvTxt = g_tfName[i] + " " + _rv2LblOwTronStr + " " + _pvDiff1Txt + " " + _pvDiff2Txt + " " + _rv2NewRsi5;
+            // Nhan Pivot: <TF> <Owtron>   (<MA1> /<MA2> da bo khoi nhan; _rv2LblMa1Str / _rv2LblMa2Str van duoc tinh o khoi tren)
+            _swapPvTxt = g_tfName[i] + " " + _rv2LblOwTronStr;   // <TF> <Owtron> (<Pivotdiff> <Pivotdiff2> <RSI5>/<xu huong> da bo khoi nhan; chuoi _pvDiff1Txt / _pvDiff2Txt / _rv2NewRsi5 van duoc tinh de dung cho nhan RV2)
             // Nhan RV1: <TF> (<rawdiffV1V2>/<diffV1V2>)   (<SpR2>/<SpR1> va <brkD>(<streak>)<SigBrk> da chuyen sang cot hang 2.. duoi nhan RV1 1m - DrawMidPriceLabel())
             //   <rawdiffV1V2> = (RV1 - RV2)/spread (RV1 = g_rv1ValCache[], RV2 = g_aptRv2All[]);
             //   <diffV1V2> = _rv2LblDiffV1V2Str. Thieu RV1/RV2/spread -> "-".
@@ -13082,7 +13082,7 @@ void DrawRv2RsiLabels()
          {
             string _pvTargetName = WoodieLevelLblPrefix(_rv1TenMucLvl) + g_tfName[i];
             // FORMAT NHAN PIVOT (chuoi _swapPvTxt ghi bang ObjectSetString ngay duoi):
-            //   <TF> <Owtron> <Pivotdiff> <Pivotdiff2> <RSI5>/<xu huong>
+            //   <TF> <Owtron>
             //   <Owtron> = _rv2LblOwTronStr (chuyen tu nhan RV2; thieu -> "-"). <PivotW%> khong con tren nhan PIVOT: chuyen sang cot hang 2.. duoi nhan RV1 1m (g_midPvWStr[]); <Pivotdiff2> cach <RSI5>/<xu huong> 1 dau cach.
             //   <RSI5>/<xu huong> = phan sau dau cach DAU TIEN cua g_pivotLblBaseText[i] ("<TF> <RSI5> / <+-diffRSI>" do DrawEmaSeries ghi), bo khoang trang quanh "/" -> dang "48/+2"; rong -> "-".
             //   Chuoi "<TF>{<DxyTenMuc>} <UpE>/<DnE> <UpB>/<DnB> <Up>/<Dn> ... <FVG><LVN><IMB>" hien o COT PATTERN (g_patCdlStr[]).
