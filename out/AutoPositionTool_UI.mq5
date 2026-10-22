@@ -232,7 +232,7 @@ input double            InpDayEdgeThresholdUSD = 5.0;      // Nguong Bid cach di
 
 // Nguong dem UpA/UpB (>= InpUpBDiffPvMin) va DnA/DnB (<= -InpDnBDiffPvMax); xem khoi cong don trong DrawBreakStats().
 input group             "=== 9B. NGUONG DEM UpA/DnA/UpB/DnB ==="
-input double            InpUpBDiffPvMin   = 1.0;   // (khong con dung: UpA nay dung dRV1W%/dRV2W%/dPivotW% > 0.1, UpB dung <brkddiff> / <brkD>)
+input double            InpUpBDiffPvMin   = 1.0;   // (khong con dung: UpA nay dung Close/Open + <brkddiff> > 1, UpB dung <brkddiff> / <brkD>)
 input double            InpDnBDiffPvMax   = 1.0;   // (khong con dung: DnA nay dung dRV1W%/dRV2W%/dPivotW% < -0.1, DnB dung <brkddiff> / <brkD>)
 
 // William %R + MA tinh tren RV2(1m)/RV1(1m); cac khung khac dung chung cac chu ky nay. Hien trong nhan RV2 (<MA1> /<MA2>; luu y: PERIOD William %R cua <MA1> /<MA2> nay theo nut B<n> - AptRvChanP(), khong theo InpWpr8Period1/InpWpr8Period), InpWpr8Period con dung cho dieu kien WPR2 cua UpA/DnA. Mac dinh khop WPR_rVWAP_Osc.mq5.
@@ -331,7 +331,7 @@ long            g_aptBrkAccDn[14];
 datetime        g_aptBrkAccBarT[14];
 datetime        g_aptBrkAccLast = 0;
 
-// Bo dem UpA/DnA (giay): UpA cong khi <dRV1W%>, <dRV2W%>, <dPivotW%> (thay doi W% theo giay, g_aptWChgV[]) deu > 0.1; DnA khi ca ba deu < -0.1.
+// Bo dem UpA/DnA (giay): UpA cong khi Close > Open (nen hien tai cua khung) VA <brkddiff> > 1; DnA khi Close < Open VA <brkddiff> < -1.
 // Dung chung moc reset g_aptBrkAccBarT[i] va dt voi cap Up/Dn.
 long            g_aptBrkAccUpA[14];
 long            g_aptBrkAccDnA[14];
@@ -3558,7 +3558,7 @@ string StatusText()
 //    va cac bo dem giay g_aptBrkAccUp/Dn, UpA/DnA, UpB/DnB, UpC/DnC (14 khung g_tfList).
 //  Dieu kien dem moi bo dem (moi khung, nen shift 0; khong du du lieu -> khong cong ben nao):
 //    Up/Dn   : Up: diffavg2 > 0.1 | Dn: diffavg2 < -0.1   (diffavg2 = diffavg hien tai - diffavg giay truoc, xem DrawMidPriceLabel())
-//    UpA/DnA : UpA: dRV1W%, dRV2W%, dPivotW% deu > 0.1 | DnA: ca ba < -0.1 (van can RV2 / WPR2 / tick / spread)
+//    UpA/DnA : UpA: Close > Open VA <brkddiff> > 1 | DnA: Close < Open VA <brkddiff> < -1
 //    UpB/DnB : UpB: (<TenMuc> thuoc {PP, R1..R9} va <brkddiff> > 1 va <bodiff> > 0.1) hoac <brkD> >= 100 | DnB: (<TenMuc> thuoc {PP, S1..S9} va <brkddiff> < -1 va <bodiff> < -0.1) hoac <brkD> <= 0
 //    UpC/DnC : UpC: <Pivotdiff> > 0.1 VA <Pivotdiff2> > 0.1 | DnC: ca hai < -0.1
 //  Moc reset: xem _aptAccResetTf trong ham.
@@ -3598,18 +3598,6 @@ void DrawBreakStats()
       g_rv1ValCache[i] = rv0;
      }
 
-   double   _aptUcWpr1M1c[];
-   int      _aptUcWpr1AvailM1c = Wpr8BuildRv1M1Series(Wpr8NeedM1Bars(), _aptUcWpr1M1c);
-   datetime _aptUcWpr1TmM1c[];
-   double   _aptUcWpr1CumTPVc[], _aptUcWpr1CumVolc[];
-   int      _aptUcWpr1GotM1c     = Wpr9BuildM1Cache(_aptUcWpr1TmM1c, _aptUcWpr1CumTPVc, _aptUcWpr1CumVolc);
-   int      _aptUcWpr1NeedTfBars = Wpr9NeedTfBars();
-
-   // RV2(1m) = EMA(g_aptRv2EmaPeriod) ap len chuoi RV1(1m) doc o tren (_aptUcWpr1M1c/_aptUcWpr1AvailM1c) qua Wpr8BuildRv2M1Series().
-   // RV2 cua 13 khung con lai (5m..1nm) duoc dung trong vong lap tu Wpr9BuildRv1Series + cache M1 dung chung o tren (xem khoi UpA/DnA).
-   double   _aptUaWpr2M1c[];
-   int      _aptUaWpr2AvailM1c = Wpr8BuildRv2M1Series(_aptUcWpr1M1c, _aptUcWpr1AvailM1c, g_aptRv2EmaPeriod, _aptUaWpr2M1c);
-
    for(int i=0; i<14; i++)
      {
       // Moc RESET (_aptAccResetTf) cua ca nam cap bo dem (Up/Dn, UpA/DnA, UpB/DnB, UpC/DnC):
@@ -3640,7 +3628,6 @@ void DrawBreakStats()
          else
             if(_aptAccDt > 0)
               {
-               double _aptNSpread = (double)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) * _Point;
                 // Dieu kien dem Up/Dn (khung g_tfList[i]): <diffavg2> = diffavg hien tai - diffavg o giay truoc (g_aptDiffAvg2V[i], DrawMidPriceLabel() ghi; cung gia tri in o hang khung cua nhan gia giua):
                 //   - Up: <diffavg2> >  0.1
                 //   - Dn: <diffavg2> < -0.1
@@ -3654,44 +3641,18 @@ void DrawBreakStats()
                         g_aptBrkAccDn[i] += _aptAccDt;
                  }
 
-                // Dieu kien dem UpA/DnA: SpR2 = lam tron (Bid - RV2)/spread (so nguyen, cung <SpR2> tren cot Pattern); WPR2 = William %R tren RV2(tf).
-                //   WPR2 tinh ngay cho khung i: khung 1m (i==0) dung _aptUaWpr2M1c/_aptUaWpr2AvailM1c tinh truoc vong lap;
-                //   13 khung con lai dung chuoi RV1(tf) tu Wpr9BuildRv1Series (cung cache M1 _aptUcWpr1TmM1c/_aptUcWpr1CumTPVc/_aptUcWpr1CumVolc/
-                //   _aptUcWpr1GotM1c/_aptUcWpr1NeedTfBars) roi Wpr8BuildRv2M1Series() ra RV2(tf).
-                //   WPR2 khong tinh duoc (EMPTY_VALUE - thieu lich su) -> dieu kien false -> khong cong ben nao.
-               double _aptRv2A = g_aptRv2All[i];
-               double _aptUaWpr2Now = EMPTY_VALUE;
-               if(i == 0)
+                // Dieu kien dem UpA/DnA (khung g_tfList[i]): Close/Open = nen HIEN TAI cua chinh khung do (Close nen dang chay = Bid); <brkddiff> = g_aptBrkDDiffV[i] (DrawMidPriceLabel() ghi; cung gia tri in tren nhan RV2).
+                //   - UpA: Close >  Open  VA  <brkddiff> >  1
+                //   - DnA: Close <  Open  VA  <brkddiff> < -1
+                //   Thieu <brkddiff> / Open / Close -> khong cong ben nao. (Dieu kien cu <dRV1W%> <dRV2W%> <dPivotW%> va WPR2 khong con dung cho UpA/DnA.)
+               double _aptAOpen  = iOpen(_Symbol, g_tfList[i], 0);
+               double _aptAClose = iClose(_Symbol, g_tfList[i], 0);
+               if(g_aptBrkDDiffOk[i] && _aptAOpen > 0.0 && _aptAClose > 0.0)
                  {
-                  if(_aptUaWpr2AvailM1c > 0)
-                     _aptUaWpr2Now = Wpr8WilliamsRAt(_aptUaWpr2M1c, _aptUaWpr2AvailM1c, 0, InpWpr8Period);
-                 }
-               else
-                 {
-                  if(_aptUcWpr1GotM1c > 0)
-                    {
-                     double _aptUaWpr1Tfc[];
-                     int _aptUaWpr1AvailTfc = Wpr9BuildRv1Series(g_tfList[i], _aptUcWpr1NeedTfBars, _aptUcWpr1CumTPVc, _aptUcWpr1CumVolc, _aptUcWpr1TmM1c, _aptUcWpr1GotM1c, _aptUaWpr1Tfc);
-                     if(_aptUaWpr1AvailTfc > 0)
-                       {
-                        double _aptUaWpr2Tfc[];
-                        int _aptUaWpr2AvailTfc = Wpr8BuildRv2M1Series(_aptUaWpr1Tfc, _aptUaWpr1AvailTfc, g_aptRv2EmaPeriod, _aptUaWpr2Tfc);
-                        if(_aptUaWpr2AvailTfc > 0)
-                           _aptUaWpr2Now = Wpr8WilliamsRAt(_aptUaWpr2Tfc, _aptUaWpr2AvailTfc, 0, InpWpr8Period);
-                       }
-                    }
-                 }
-                // Dieu kien dem UpA/DnA: <dRV1W%> <dRV2W%> <dPivotW%> = thay doi theo GIAY cua <RV1W%> <RV2W%> <PivotW%> (g_aptWChgV[i*4 + 1..3]; <dOWW%> khong tham gia, DrawMidPriceLabel() / AptWChgStr() ghi; cung gia tri in o hang khung cua nhan gia giua).
-                //   - UpA: CA BA gia tri >  0.1
-                //   - DnA: CA BA gia tri < -0.1
-                //   Thieu RV2 / WPR2 (khong du lich su) / tick / spread, hoac thieu BAT KY gia tri nao trong ba gia tri tren -> khong cong ben nao.
-               if(g_aptRv2AllOk[i] && _aptRv2A > 0.0 && _aptUaWpr2Now != EMPTY_VALUE && bidNow > 0.0 && _aptNSpread > 0.0 &&
-                  g_aptWChgOk[i*4 + 1] && g_aptWChgOk[i*4 + 2] && g_aptWChgOk[i*4 + 3])
-                 {
-                  if(g_aptWChgV[i*4 + 1] > 0.1 && g_aptWChgV[i*4 + 2] > 0.1 && g_aptWChgV[i*4 + 3] > 0.1)
+                  if(_aptAClose > _aptAOpen && g_aptBrkDDiffV[i] > 1.0)
                      g_aptBrkAccUpA[i] += _aptAccDt;
                   else
-                     if(g_aptWChgV[i*4 + 1] < -0.1 && g_aptWChgV[i*4 + 2] < -0.1 && g_aptWChgV[i*4 + 3] < -0.1)
+                     if(_aptAClose < _aptAOpen && g_aptBrkDDiffV[i] < -1.0)
                         g_aptBrkAccDnA[i] += _aptAccDt;
                  }
 
