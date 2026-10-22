@@ -81,8 +81,8 @@
 //     LUU Y: <RV1W%>/<RV2W%>/<PivotW%> chi duoc cap nhat khi DrawRv2RsiLabels() chay den khung do (can bat cot nhan RV1 hoac RV2); khung thieu lich su hoac cot nhan tat -> "-".
 //
 //  3) NHAN RV2    | object = g_rv2RsiLblPrefix+TF | chuoi = txt trong DrawRv2RsiLabels() (dong "txt = g_tfName[i] + " (" + ...; txt += g_midRowTailStr[idx];" - cum nay tu dong dong ngoac ")")
-//     FORMAT : <TF> (<RSI>/<dRSI> <RSI5>/<xu huong> <Pivotdiff2> <Pivotdiff> { <SigBrk><brkD>/<brkddiff><TenMuc> <bodiff>/<(Bid-Open)/spread> } <SpR2>/<SpR1> <diffavg>/<diffavg2>)   (<Owtron> da chuyen sang nhan Pivot; cum tu <SigBrk> tro di lay tu hang khung cu cua nhan gia giua; (<RSI>/<dRSI> <RSI5>/<xu huong> <Pivotdiff2> <Pivotdiff>) dinh lien sau <Owtron> va truoc <SigBrk>)
-//     vd     : 5m (48/+10 48/+2 0.3 -0.5 { ▲112/+5R2 0.1/-0.8 } -3/-5 4.1/0.2) 48/+10
+//     FORMAT : <TF> (<RSI>/<dRSI> <RSI5>/<xu huong> <Pivotdiff2> <Pivotdiff> { <(Bid-Open)/spread> <SigBrk><brkD>/<brkddiff><TenMuc> <bodiff> } <SpR2>/<SpR1> <diffavg>/<diffavg2>)   (<Owtron> da chuyen sang nhan Pivot; cum tu <SigBrk> tro di lay tu hang khung cu cua nhan gia giua; (<RSI>/<dRSI> <RSI5>/<xu huong> <Pivotdiff2> <Pivotdiff>) dinh lien sau <Owtron> va truoc <SigBrk>)
+//     vd     : 5m (48/+10 48/+2 0.3 -0.5 { -0.8 ▲112/+5R2 0.1 } -3/-5 4.1/0.2) 48/+10
 //     0. <TF>          = ten khung (g_tfName[i]); sau do 1 dau cach roi <SigBrk><brkD>/<brkddiff> (brkD = (Close-LL)/(HH-LL)*100 cua kenh brkD GIA, <SigBrk> = tam giac tang khi brkD >= 110 / giam khi <= -10, brkddiff = brkD nen hien tai - brkD nen da dong truoc, co dau "+" khi duong; thieu -> "-"). Nhan RV2 khong con gi khac: <MA1> /<MA2> da chuyen sang nhan PIVOT, <RV1W%>/<RV2W%> sang cot hang 2.. duoi nhan RV1 1m; <RV1erh>/... <RV2erh>/... da bo (ke ca phan tinh toan; AptRvChanErStr() con trong file nhung khong con duoc goi).
 //
 //  4) COT PATTERN | object = PFX"PATL_"+i | chuoi = g_patCdlStr[i] (do DrawRv2RsiLabels() ghi, dong "g_patCdlStr[_rv1UdIdx] = g_tfName[i] + AptDxyLvlTag(...) + " " + <5 cap UpE, UpB, Up, UpC, UpA> + " " + _rv1NewFvg + _rv1NewLvn + _rv1NewImb"); chua co -> chi <TF>{<DxyTenMuc>}
@@ -7151,9 +7151,9 @@ input int   InpLblColExtraPadPx = 70;      // Khe ho CONG THEM giua Pivot/RV1/RV
 // So nen M1 lam khe ho chinh giua cot nhan Pivot va nhan RV1-1m (dong tinh _rv1m1FinalT trong DrawRv2RsiLabels).
 input int   InpRv1M1GapM1Bars   = 32;       // Khe ho cot Pivot -> nhan RV1-1m (so nen M1)
 // Cot RV2 neo tai nen lich su thu N cua khung M1 (dem tu nen M1 hien tai lui ve qua khu; xem DrawRv2RsiLabels). N <= 0 hoac lon hon so nen M1 doc duoc -> ep ve gia tri hop le gan nhat.
-input int   InpRv1Rv2LeftM1BarIdx = 12;     // Cot RV2: neo tai nen lich su thu N cua khung M1
+input int   InpRv1Rv2LeftM1BarIdx = 5;     // Cot RV2: neo tai nen lich su thu N cua khung M1
 // Cot RV1 (khung >=5m) neo DOC LAP voi cot RV2: cach nen M1 dang chay hien tai N nen M1 ve TUONG LAI (N = InpRv1LeftM1FutureBars).
-input int   InpRv1LeftM1FutureBars = 34;    // Cot RV1(>=5m) - neo DOC LAP: cach nen M1 hien tai N nen M1 ve TUONG LAI
+input int   InpRv1LeftM1FutureBars = 28;    // Cot RV1(>=5m) - neo DOC LAP: cach nen M1 hien tai N nen M1 ve TUONG LAI
 input int   InpCsmaFutureBars      = 38;    // Nhan Close Simple (SMA) - cach nhan RV1 1m hien tai N nen CUA CHART ve TUONG LAI
 // So diem Pivot lich su toi da va so segment toi da dung InpHistPoints / InpMaxSegments o nhom "Tham so tinh toan" phia tren (mac dinh 480 / 160).
 
@@ -10663,7 +10663,7 @@ void DrawMidPriceLabel()
       static datetime s_boBar[14];
       static double   s_boCur[14];
       static double   s_boPrev[14];
-      string rowBO = "-";
+      string rowBO = "-", rowBOVal = "-", rowBODf = "-";   // rowBODf = <bodiff>, rowBOVal = <(Bid-Open)/spread>
       if(spread > 0.0 && opR > 0.0)
         {
          double   boNow  = (bid - opR) / spread;
@@ -10692,7 +10692,9 @@ void DrawMidPriceLabel()
          g_aptBoDiffOk[ix] = true;
          g_aptBoValV[ix]   = NormalizeDouble(boNow, M1_ELP_LBL_DIF1_DIGITS);
          g_aptBoValOk[ix]  = true;
-         rowBO = DoubleToString(boDf, M1_ELP_LBL_DIF1_DIGITS) + "/" + DoubleToString(boNow, M1_ELP_LBL_DIF1_DIGITS);   // <bodiff>/<(Bid-Open)/spread>
+         rowBODf  = DoubleToString(boDf,  M1_ELP_LBL_DIF1_DIGITS);   // <bodiff>
+         rowBOVal = DoubleToString(boNow, M1_ELP_LBL_DIF1_DIGITS);   // <(Bid-Open)/spread>
+         rowBO = rowBODf + "/" + rowBOVal;
         }
       else
          s_boSec[ix] = 0;
@@ -10764,7 +10766,7 @@ void DrawMidPriceLabel()
         }
       if(!daOk)
          s_daSec[ix] = 0;
-      g_midRowTailStr[ix] = " { " + rowBrk + " " + rowBO + " } " + rowSpR2 + "/" + rowSpR1 + " " + rowDiffAvg + ")";   // { <SigBrk><brkD>/<brkddiff><TenMuc> <bodiff>/<(Bid-Open)/spread> } <SpR2>/<SpR1> <diffavg>/<diffavg2>)  (")" dong ngoac "(" mo o nhan RV2; <RSI>/<dRSI> khong con o cuoi nhan)
+      g_midRowTailStr[ix] = " { " + rowBOVal + " " + rowBrk + " " + rowBODf + " } " + rowSpR2 + "/" + rowSpR1 + " " + rowDiffAvg + ")";   // { <(Bid-Open)/spread> <SigBrk><brkD>/<brkddiff><TenMuc> <bodiff> } <SpR2>/<SpR1> <diffavg>/<diffavg2>)  (")" dong ngoac "(" mo o nhan RV2; <RSI>/<dRSI> khong con o cuoi nhan)
      }
 
    // Quy doi pixel -> gia de xep hang 2..15 xuong duoi hang 1 (khong phu thuoc ChartTimePriceToXY: moc thoi gian nam o tuong lai)
@@ -12849,9 +12851,9 @@ void DrawRv2RsiLabels()
       // Nhan RV2: <TF> <SigBrk><brkD>/<brkddiff><TenMuc> <bodiff>/<(Bid-Open)/spread> <SpR2>/<SpR1> <diffavg>/<diffavg2> <RSI>/<dRSI>
       //   Phan sau <TF> = g_midRowTailStr[idx] (chuyen tu hang khung cua nhan gia giua; DrawMidPriceLabel() tinh va ghi moi lan ve, gom cac gia tri co trang thai nhu bodiff / diffavg2). Chua co / thieu -> chi <TF>.
       //   (<MA1> /<MA2> da chuyen sang nhan PIVOT.)
-      // Nhan RV2: <TF> (<RSI>/<dRSI> <RSI5>/<xu huong> <Pivotdiff2> <Pivotdiff> { <SigBrk><brkD>/<brkddiff><TenMuc> <bodiff>/<(Bid-Open)/spread> } <SpR2>/<SpR1> <diffavg>/<diffavg2>)
+      // Nhan RV2: <TF> (<RSI>/<dRSI> <RSI5>/<xu huong> <Pivotdiff2> <Pivotdiff> { <(Bid-Open)/spread> <SigBrk><brkD>/<brkddiff><TenMuc> <bodiff> } <SpR2>/<SpR1> <diffavg>/<diffavg2>)
       //   <Owtron> da chuyen sang nhan Pivot (_rv2LblOwTronStr, tinh o khoi tren). <RSI>/<dRSI> = _rv2NewRsi; <RSI5>/<xu huong> = _rv2NewRsi5 (cung chuoi nhan Pivot); <Pivotdiff2> = g_pivotEmaDiff2Str[]; <Pivotdiff> = g_pivotEmaDiffStr[]; thieu -> "-".
-      //   Ngoac "(" mo sau <TF> + 1 dau cach va chua: <RSI>/<dRSI> <RSI5>/<xu huong> <Pivotdiff2> <Pivotdiff> + 1 dau cach + { <SigBrk>...<(Bid-Open)/spread> } (ngoac nhon, co 1 dau cach trong moi dau ngoac) + 1 dau cach + <SpR2>/<SpR1> <diffavg>/<diffavg2> + ")"; phan tu "[" tro di = g_midRowTailStr[idx] (da gom ")" dong ngoac); Sau ")" khong con gi. Chua co cum -> nhan dong ngoac ngay sau <Pivotdiff>. <PivotW%> khong con tren nhan RV2.
+      //   Ngoac "(" mo sau <TF> + 1 dau cach va chua: <RSI>/<dRSI> <RSI5>/<xu huong> <Pivotdiff2> <Pivotdiff> + 1 dau cach + { <(Bid-Open)/spread> <SigBrk>...<bodiff> } (ngoac nhon, co 1 dau cach trong moi dau ngoac) + 1 dau cach + <SpR2>/<SpR1> <diffavg>/<diffavg2> + ")"; phan tu "[" tro di = g_midRowTailStr[idx] (da gom ")" dong ngoac); Sau ")" khong con gi. Chua co cum -> nhan dong ngoac ngay sau <Pivotdiff>. <PivotW%> khong con tren nhan RV2.
       string _rv2TxtPd1 = "-", _rv2TxtPd2 = "-";   // <Pivotdiff> / <Pivotdiff2> (g_pivotEmaDiffStr[] / g_pivotEmaDiff2Str[], do DrawWoodiePivotEma() ghi); chua co -> "-"
       if(_rv2LblUdIdx >= 0 && _rv2LblUdIdx < 14)
         {
